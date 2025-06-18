@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ლიზინგის გუნდის გემიფიკაციის სისტემა - Live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .connection-status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .main-table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9ff;
+        }
+        
+        .manager-name {
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: left !important;
+            padding-left: 15px;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 5;
+            min-width: 150px;
+        }
+        
+        tbody tr:hover .manager-name {
+            background-color: #f8f9ff;
+        }
+        
+        .total-points {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #e74c3c;
+        }
+        
+        .level-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8em;
+            color: white;
+            display: inline-block;
+            min-width: 120px;
+        }
+        
+        .level-1 { background: linear-gradient(45deg, #95a5a6, #7f8c8d); }
+        .level-2 { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .level-3 { background: linear-gradient(45deg, #e67e22, #d35400); }
+        .level-4 { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+        .level-5 { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        
+        .input-field {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 2px solid #ecf0f1;
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: border-color 0.2s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-field.syncing {
+            border-color: #f39c12;
+            background: #fef9e7;
+        }
+        
+        .leaderboard {
+            margin-bottom: 20px;
+        }
+        
+        .leaderboard h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .leader-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .leader-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .leader-points {
+            font-weight: 700;
+            color: #e74c3c;
+        }
+        
+        .points-legend {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .points-legend h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 0.85em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .save-btn, .load-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .save-btn:hover, .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .month-selector {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .month-selector select {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .auto-save-indicator {
+            padding: 5px 15px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .auto-save-indicator.show {
+            opacity: 1;
+        }
+
+        .sync-indicator {
+            padding: 5px 15px;
+            background: #f39c12;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sync-indicator.show {
+            opacity: 1;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                max-height: none;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+        
+        /* Custom scrollbar */
+        .table-wrapper::-webkit-scrollbar,
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-track,
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .table-wrapper::-webkit-scrollbar-thumb,
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 ლიზინგის გუნდის გემიფიკაციის სისტემა - Live</h1>
+        
+        <div id="connectionStatus" class="connection-status disconnected">
+            🔄 Firebase-თან კავშირის დამყარება...
+        </div>
+
+        <div class="month-selector">
+            <select id="monthSelect">
+                <option value="2025-01">იანვარი 2025</option>
+                <option value="2025-02">თებერვალი 2025</option>
+                <option value="2025-03">მარტი 2025</option>
+                <option value="2025-04">აპრილი 2025</option>
+                <option value="2025-05">მაისი 2025</option>
+                <option value="2025-06" selected>ივნისი 2025</option>
+                <option value="2025-07">ივლისი 2025</option>
+                <option value="2025-08">აგვისტო 2025</option>
+                <option value="2025-09">სექტემბერი 2025</option>
+                <option value="2025-10">ოქტომბერი 2025</option>
+                <option value="2025-11">ნოემბერი 2025</option>
+                <option value="2025-12">დეკემბერი 2025</option>
+            </select>
+        </div>
+        
+        <div class="dashboard">
+            <div class="main-table-container">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 150px; left: 0; position: sticky; z-index: 15;">მენეჯერი</th>
+                                <th>ახალი კონტაქტი (1)</th>
+                                <th>პრეზენტაცია (10)</th>
+                                <th>შეთავაზება (10)</th>
+                                <th>ხელშეკრულება (30)</th>
+                                <th>რეკომენდაცია (15)</th>
+                                <th>დაბრუნება (20)</th>
+                                <th>გუნდური დახმარება (10)</th>
+                                <th>ახალი სეგმენტი (25)</th>
+                                <th>კვირის გამოწვევა (25)</th>
+                                <th style="width: 80px;">სულ ქულა</th>
+                                <th style="width: 140px;">დონე</th>
+                            </tr>
+                        </thead>
+                        <tbody id="managersTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="leaderboard">
+                    <h3>🏆 ლიდერბორდი</h3>
+                    <div id="leaderboard"></div>
+                </div>
+                
+                <div class="points-legend">
+                    <h4>📊 ქულების სისტემა</h4>
+                    <div class="legend-item">
+                        <span>ახალი კონტაქტი:</span>
+                        <span>1 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>პრეზენტაცია:</span>
+                        <span>10 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>შეთავაზება:</span>
+                        <span>10 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>ხელშეკრულება:</span>
+                        <span>30 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>რეკომენდაცია:</span>
+                        <span>15 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>დაბრუნება:</span>
+                        <span>20 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>გუნდური დახმარება:</span>
+                        <span>10 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>ახალი სეგმენტი:</span>
+                        <span>25 ქულა</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>კვირის გამოწვევა:</span>
+                        <span>25 ქულა</span>
+                    </div>
+                </div>
+                
+                <div class="points-legend" style="margin-top: 15px;">
+                    <h4>🎖️ დონეები</h4>
+                    <div class="legend-item">
+                        <span>0-100:</span>
+                        <span>ახალბედა პაპი</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>100-200:</span>
+                        <span>კონტაქტის ოსტატი</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>200-300:</span>
+                        <span>შეთავაზების იოი</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>300-400:</span>
+                        <span>ხელშეკრულების ჯუვენილი</span>
+                    </div>
+                    <div class="legend-item">
+                        <span>400+:</span>
+                        <span>ლიზინგის შარკი</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="save-btn" onclick="exportToFile()">💾 ფაილში ექსპორტი</button>
+            <button class="load-btn" onclick="document.getElementById('fileInput').click()">📁 ფაილიდან იმპორტი</button>
+            <input type="file" id="fileInput" class="file-input" accept=".json" onchange="importFromFile(event)">
+            <div id="syncIndicator" class="sync-indicator">🔄 სინქრონიზაცია...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, push, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        // Firebase კონფიგურაცია
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-OFEOOsznc-mGksCRSdWQxlAlffsZp9A",
+            authDomain: "sale-gamefication.firebaseapp.com",
+            databaseURL: "https://sale-gamefication-default-rtdb.firebaseio.com",
+            projectId: "sale-gamefication",
+            storageBucket: "sale-gamefication.firebasestorage.app",
+            messagingSenderId: "408303129668",
+            appId: "1:408303129668:web:c1f1e37f5ada2d76259811",
+            measurementId: "G-VNNMHDQXZR"
+        };
+
+        // Firebase ინიციალიზაცია
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const analytics = getAnalytics(app);
+
+        // გლობალური ცვლადები
+        const managers = [
+            'გიორგი თოდუა',
+            'გიორგი მელია', 
+            'იზა ბალხამიშვილი',
+            'გიორგი კაპანაძე',
+            'ხვიჩა ხოზრევანიძე'
+        ];
+        
+        const pointValues = [1, 10, 10, 30, 15, 20, 10, 25, 25];
+        
+        let data = {};
+        let isConnected = false;
+        let localUpdateInProgress = false;
+
+        // კავშირის სტატუსის ელემენტები
+        const connectionStatus = document.getElementById('connectionStatus');
+        const syncIndicator = document.getElementById('syncIndicator');
+
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            if (connected) {
+                connectionStatus.className = 'connection-status connected';
+                connectionStatus.innerHTML = '🟢 Firebase-თან კავშირი დამყარებულია';
+            } else {
+                connectionStatus.className = 'connection-status disconnected';
+                connectionStatus.innerHTML = '🔴 Firebase-თან კავშირი გაწყვეტილია';
+            }
+        }
+
+        function showSyncIndicator() {
+            syncIndicator.classList.add('show');
+            setTimeout(() => {
+                syncIndicator.classList.remove('show');
+            }, 1500);
+        }
+
+        function getLevelInfo(points) {
+            if (points >= 400) return { level: 5, title: 'ლიზინგის შარკი', class: 'level-5' };
+            if (points >= 300) return { level: 4, title: 'ხელშეკრულების ჯუვენილი', class: 'level-4' };
+            if (points >= 200) return { level: 3, title: 'შეთავაზების იოი', class: 'level-3' };
+            if (points >= 100) return { level: 2, title: 'კონტაქტის ოსტატი', class: 'level-2' };
+            return { level: 1, title: 'ახალბედა პაპი', class: 'level-1' };
+        }
+        
+        function initializeData() {
+            const currentMonth = document.getElementById('monthSelect').value;
+            if (!data[currentMonth]) {
+                data[currentMonth] = {};
+                managers.forEach(manager => {
+                    data[currentMonth][manager] = new Array(9).fill(0);
+                });
+            }
+        }
+        
+        function renderTable() {
+            const currentMonth = document.getElementById('monthSelect').value;
+            initializeData();
+            
+            const tbody = document.getElementById('managersTable');
+            tbody.innerHTML = '';
+            
+            managers.forEach(manager => {
+                const row = document.createElement('tr');
+                const managerData = data[currentMonth][manager];
+                const totalPoints = managerData.reduce((sum, count, index) => sum + (count * pointValues[index]), 0);
+                const levelInfo = getLevelInfo(totalPoints);
+                
+                row.innerHTML = `
+                    <td class="manager-name">${manager}</td>
+                    ${managerData.map((value, index) => 
+                        `<td><input type="number" class="input-field" value="${value}" min="0" 
+                         onchange="updateData('${manager}', ${index}, this.value)" 
+                         data-manager="${manager}" data-index="${index}"></td>`
+                    ).join('')}
+                    <td class="total-points">${totalPoints}</td>
+                    <td><span class="level-badge ${levelInfo.class}">${levelInfo.title}</span></td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            updateLeaderboard();
+        }
+        
+        async function updateData(manager, index, value) {
+            if (localUpdateInProgress) return;
+            
+            const currentMonth = document.getElementById('monthSelect').value;
+            const newValue = parseInt(value) || 0;
+            
+            // ლოკალური განახლება
+            data[currentMonth][manager][index] = newValue;
+            renderTable();
+            
+            // Firebase-ში სინქრონიზაცია
+            if (isConnected) {
+                try {
+                    showSyncIndicator();
+                    const dataRef = ref(database, `gamification/${currentMonth}/${manager}/${index}`);
+                    await set(dataRef, newValue);
+                } catch (error) {
+                    console.error('Firebase განახლების შეცდომა:', error);
+                }
+            }
+        }
+        
+        function updateLeaderboard() {
+            const currentMonth = document.getElementById('monthSelect').value;
+            const leaderboard = document.getElementById('leaderboard');
+            
+            const managerPoints = managers.map(manager => {
+                const totalPoints = data[currentMonth][manager].reduce((sum, count, index) => sum + (count * pointValues[index]), 0);
+                return { name: manager, points: totalPoints };
+            }).sort((a, b) => b.points - a.points);
+            
+            leaderboard.innerHTML = managerPoints.map((manager, index) => `
+                <div class="leader-item">
+                    <span class="leader-name">${index + 1}. ${manager.name}</span>
+                    <span class="leader-points">${manager.points} ქულა</span>
+                </div>
+            `).join('');
+        }
+
+        // Firebase-იდან მონაცემების ჩატვირთვა
+        async function loadFromFirebase() {
+            try {
+                const dataRef = ref(database, 'gamification');
+                const snapshot = await get(dataRef);
+                
+                if (snapshot.exists()) {
+                    const firebaseData = snapshot.val();
+                    data = firebaseData;
+                    renderTable();
+                } else {
+                    // თუ მონაცემები არ არსებობს, ვქმნით საწყის სტრუქტურას
+                    initializeData();
+                    await saveToFirebase();
+                }
+            } catch (error) {
+                console.error('Firebase-იდან ჩატვირთვის შეცდომა:', error);
+                initializeData();
+            }
+        }
+
+        // Firebase-ში მონაცემების შენახვა
+        async function saveToFirebase() {
+            if (!isConnected) return;
+            
+            try {
+                const dataRef = ref(database, 'gamification');
+                await set(dataRef, data);
+            } catch (error) {
+                console.error('Firebase-ში შენახვის შეცდომა:', error);
+            }
+        }
+
+        // რეალ-ტაიმ სინქრონიზაცია
+        function setupRealtimeSync() {
+            const dataRef = ref(database, 'gamification');
+            
+            onValue(dataRef, (snapshot) => {
+                if (snapshot.exists() && !localUpdateInProgress) {
+                    localUpdateInProgress = true;
+                    const firebaseData = snapshot.val();
+                    
+                    // შევადაროთ არსებულ მონაცემებს
+                    const currentMonth = document.getElementById('monthSelect').value;
+                    let hasChanges = false;
+                    
+                    if (firebaseData && firebaseData[currentMonth]) {
+                        managers.forEach(manager => {
+                            if (firebaseData[currentMonth][manager]) {
+                                firebaseData[currentMonth][manager].forEach((value, index) => {
+                                    if (data[currentMonth] && 
+                                        data[currentMonth][manager] && 
+                                        data[currentMonth][manager][index] !== value) {
+                                        hasChanges = true;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    
+                    if (hasChanges) {
+                        data = firebaseData;
+                        renderTable();
+                        showSyncIndicator();
+                    }
+                    
+                    setTimeout(() => {
+                        localUpdateInProgress = false;
+                    }, 100);
+                }
+            }, (error) => {
+                console.error('რეალ-ტაიმ სინქრონიზაციის შეცდომა:', error);
+                updateConnectionStatus(false);
+            });
+        }
+
+        // კავშირის მონიტორინგი
+        function setupConnectionMonitoring() {
+            const connectedRef = ref(database, '.info/connected');
+            onValue(connectedRef, (snapshot) => {
+                updateConnectionStatus(snapshot.val());
+                if (snapshot.val()) {
+                    loadFromFirebase();
+                    setupRealtimeSync();
+                }
+            });
+        }
+
+        // ფაილში ექსპორტი
+        function exportToFile() {
+            const jsonData = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const date = new Date().toISOString().split('T')[0];
+            a.download = `leasing_gamification_backup_${date}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('მონაცემები ექსპორტირებულია! ფაილი ჩამოიტვირთა.');
+        }
+        
+        // ფაილიდან იმპორტი
+        function importFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (typeof importedData !== 'object') {
+                        throw new Error('არასწორი ფაილის ფორმატი');
+                    }
+                    
+                    data = importedData;
+                    renderTable();
+                    
+                    // Firebase-ში სინქრონიზაცია
+                    if (isConnected) {
+                        await saveToFirebase();
+                        showSyncIndicator();
+                    }
+                    
+                    alert('მონაცემები წარმატებით ჩაიტვირთა!');
+                } catch (error) {
+                    alert('ფაილის ჩატვირთვისას მოხდა შეცდომა: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            event.target.value = '';
+        }
+
+        // თვის ცვლილების ივენთი
+        document.getElementById('monthSelect').addEventListener('change', () => {
+            renderTable();
+        });
+
+        // გლობალური ფუნქციები window ობიექტზე
+        window.updateData = updateData;
+        window.exportToFile = exportToFile;
+        window.importFromFile = importFromFile;
+
+        // ინიციალიზაცია
+        updateConnectionStatus(false);
+        initializeData();
+        renderTable();
+        setupConnectionMonitoring();
+    </script>
+</body>
+</html>
