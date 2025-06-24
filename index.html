@@ -344,7 +344,7 @@
                 <option value="2025-03">მარტი 2025</option>
                 <option value="2025-04">აპრილი 2025</option>
                 <option value="2025-05">მაისი 2025</option>
-                <option value="2025-06" selected>ივნისი 2025</option>
+                <option value="2025-06">ივნისი 2025</option>
                 <option value="2025-07">ივლისი 2025</option>
                 <option value="2025-08">აგვისტო 2025</option>
                 <option value="2025-09">სექტემბერი 2025</option>
@@ -618,7 +618,8 @@
                 
                 if (snapshot.exists()) {
                     const firebaseData = snapshot.val();
-                    data = firebaseData;
+                    // არ გადავაწეროთ მთელი data ობიექტი, მხოლოდ მერჯი გავაკეთოთ
+                    data = { ...data, ...firebaseData };
                     renderTable();
                 } else {
                     // თუ მონაცემები არ არსებობს, ვქმნით საწყის სტრუქტურას
@@ -628,6 +629,7 @@
             } catch (error) {
                 console.error('Firebase-იდან ჩატვირთვის შეცდომა:', error);
                 initializeData();
+                renderTable();
             }
         }
 
@@ -792,12 +794,15 @@
         // თვის ცვლილების ივენთი
         document.getElementById('monthSelect').addEventListener('change', async (e) => {
             const selectedMonth = e.target.value;
+            console.log(`თვე შეიცვალა: ${selectedMonth}`); // დეباგისთვის
             
             // ჯერ ჩავტვირთოთ ახალი თვის მონაცემები Firebase-იდან
             await loadMonthFromFirebase(selectedMonth);
             
             // შემდეგ განვაახლოთ ცხრილი
             renderTable();
+            
+            console.log(`მიმდინარე თვე: ${document.getElementById('monthSelect').value}`); // დებაგი
         });
 
         // გლობალური ფუნქციები window ობიექტზე
@@ -807,6 +812,23 @@
 
         // ინიციალიზაცია
         updateConnectionStatus(false);
+        
+        // მიმდინარე თვის დაყენება (ივნისი 2025)
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 0-11 დან 1-12 მდე
+        const monthValue = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
+        
+        // თუ მიმდინარე თვე select-ში არსებობს, მასზე დავაყენოთ
+        const monthSelect = document.getElementById('monthSelect');
+        const monthOption = monthSelect.querySelector(`option[value="${monthValue}"]`);
+        if (monthOption) {
+            monthSelect.value = monthValue;
+        } else {
+            // თუ არ არსებობს, ივნისზე დავტოვოთ
+            monthSelect.value = '2025-06';
+        }
+        
         initializeData();
         renderTable();
         setupConnectionMonitoring();
